@@ -9,6 +9,8 @@ import select
 import sys
 
 from helpers import UnpackInteger
+from player import Player
+from messages import SendMessage, CreateAcceptMessage
 
 ip = ""
 
@@ -42,11 +44,19 @@ class Server(object):
         self.verbose = verbose
         
         # Initialize the socket
-        self.sock = socket.socket(socket.AF_INET,    #IPv4
-                                  socket.SOCK_DGRAM) #UDP
-        
+        try:
+            self.sock = socket.socket(socket.AF_INET,    #IPv4
+                                      socket.SOCK_DGRAM) #UDP
+        except:
+            print "Unable to create the socket!"
+            sys.exit()
+            
         # Bind the socket
-        self.sock.bind( (ip, self.port) )
+        try:
+            self.sock.bind( (ip, self.port) )
+        except:
+            print "Unable to bind the socket"
+            sys.exit()
         
         # Create the client listing
         self.listClients = []
@@ -152,8 +162,71 @@ class Server(object):
         # 40 - MSG_QUIT
         ################################
         
+        # MSG_JOIN
+        if messageId == 1:
+            # Handle the join attempt
+            self.HandleClientJoin(addr)
         
+        # MSG_PLACE
+        elif messageId == 11:
+            # Do something
+            pass
+        
+        # MSG_QUIT
+        elif messageId == 40:
+            # Quit the player
+            pass
+        
+        # Otherwise
+        else:
+            # Just ignore
+            pass
             
     
+        # <---------- End of HandleClientInput() -----------> #
+        
+    def HandleClientJoin(self, clientAddress):
+        """
+        Handles the situation when client tries to join the server
+        """
+        if self.verbose:
+            print "Client", clientAddress, "trying to join the server"
+            
+        # If there are more than two players already on the server
+        if len(self.listClients) > 2:
+            # Send a error message
+            print "NO ERROR MESAGE SENDING IMPLEMENTED!!!!"
+            # And return
+            return
+            
+        # Otherwise, keep on going
+        # Check that neither of the players have the same port (prevent duplicates)
+        for playerEntry in self.listClients:
+            # If the IP is the same
+            if playerEntry.ip == clientAddress[0]:
+                # If the port is the same as weell
+                if playerEntry.port == clientAddress[1]:
+                    # Send error, that the player is already on the server
+                    print "NO ERROR MESSAGE FOR DUPLICATE PLAYERS IMPLEMENTED!!!!"
+                    # And return 
+                    return
+                
+        # If that check was passed, create a new player and add him to the list
+        player = Player(clientAddress[0], clientAddress[1])
+        self.listClients.append(player)
+        
+        if self.verbose:
+            print "Added player:", player.ip, player.port
+        
+        # Create the accept message
+        message = CreateAcceptMessage()
+        # And send the join message to the player
+        SendMessage(self.sock, player.ip, player.port, message)
+        
+        
+        # <---------- End of HandleClientJoin() -----------> #
+            
+                
+            
         
         

@@ -85,3 +85,4 @@ def UnpackString(messageBuffer, position):
     
     # Finally, return the string and the position for next read bit
     return messageString, (endPosition+1)
+
