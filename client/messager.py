@@ -5,6 +5,9 @@ Created on Feb 4, 2012
 '''
 
 from helpers import AddCarriageLineReturnFeed
+import struct
+
+MAX_BUFFER_SIZE = 128
 
 class Messager(object):
     '''
@@ -16,7 +19,8 @@ class Messager(object):
         '''
         Constructor
         '''
-        
+        # The packer class
+        #self.struct = struct.Struct()
         
     def CreateJoinMessage(self):
         """
@@ -47,4 +51,29 @@ class Messager(object):
         message = AddCarriageLineReturnFeed(message)
         
         # Return the correct message
+        return message
+    
+    def CreatePlaceMessage(self, marker, position):
+        """
+        Creates the PLACE message
+        @param marker: The marker the player is using (X/O)
+        @type marker: Character
+        @param position: The number of the board on where to place the marker
+        @type position: Integer
+        @return: The message in correct format
+        @rtype: String
+        """
+        
+
+        # First, define the message ID
+        id = 11
+        
+        # Then, pack the values to the message
+        #message = struct.pack("hh1", id, marker, position)
+        message = struct.pack('>ici', id, marker, position)
+        
+        # Finish of with nice CLRF ;-)
+        #message = AddCarriageLineReturnFeed(message)
+        
+        # Return the completed message
         return message

@@ -5,8 +5,9 @@ Created on Feb 4, 2012
 '''
 
 import socket
+import struct
 
-ip = "127.0.0.1"
+ip = ""
 
 # Buffer size
 MAX_BUFFER_SIZE = 128
@@ -59,10 +60,16 @@ class Server(object):
         # Start running
         while True:
             data, addr = sock.recvfrom(MAX_BUFFER_SIZE)
-            print "Received message:", data[:-2]
-            print "From:", addr
-            
+            print "Received message from:", addr
             print "Message length was", len(data)
+            
+            # Return the sent message
+            sock.sendto(data, addr)
+            
+            # Get the first value of the message
+            #value = str(4)
+            #value = struct.unpack(">ici", data)
+            #print "The message was of the type:", value
             
     
         
