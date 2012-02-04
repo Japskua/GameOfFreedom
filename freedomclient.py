@@ -35,4 +35,5 @@ if verbose:
 
 # Create the server class and put it to run
 freedom_client = Client(host, port, verbose)
-freedom_client.SendMessage("Hei Serveri!")
+freedom_client.JoinServer()
+#freedom_client.SendMessage("Hei Serveri!")

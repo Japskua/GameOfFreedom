@@ -9,7 +9,7 @@ import socket
 ip = "127.0.0.1"
 
 # Buffer size
-buffer_size = 512
+MAX_BUFFER_SIZE = 128
 
 class Server(object):
     '''
@@ -58,8 +58,12 @@ class Server(object):
         
         # Start running
         while True:
-            data, addr = sock.recvfrom(buffer_size)
-            print "Received message:", data
+            data, addr = sock.recvfrom(MAX_BUFFER_SIZE)
+            print "Received message:", data[:-2]
             print "From:", addr
+            
+            print "Message length was", len(data)
+            
+    
         
         
