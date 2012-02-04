@@ -9,11 +9,11 @@ import getopt
 import sys
 
 version = '1.0'
-verbose = True
+verbose = False
 port = 100
 host = "100.0"
 
-output_filename = 'output.log'
+output_filename = 'output_server.log'
 
 ## Get the command line arguments
 options, remainder = getopt.getopt(sys.argv[1:], 'h:p:v', ['host=', 
