@@ -7,7 +7,7 @@ Created on Feb 4, 2012
 import socket
 from messager import Messager
 import select
-import sys
+from keyboardcontroller import KeyboardController
 
 # DEFINES
 STDIN = 0
@@ -35,6 +35,8 @@ class Client(object):
         
         # Create the messager
         self.messager = Messager()
+        # Create the keyboard controller
+        self.keyboardController = KeyboardController()
         
     def StartClient(self):
         """
@@ -46,22 +48,22 @@ class Client(object):
             # Create the select
             # Read interface is the only one existing (no errors nor writes)
             # The read interfaces are the keyboard input and the server response
-            input_interfaces, writesock, errorsock = select.select([STDIN, self.sock], [], [])
+            input_interfaces = select.select([STDIN, self.sock], [], [])[0]
             
             # Check if any of the interfaces contain anything
             for interface in input_interfaces:
             
                 # If there is any keyboard input coming
                 if interface == STDIN:
-                    data = sys.stdin.readline()
-                    print data
+                    # Get the data from the 
+                    self.keyboardController.ReadInput()
+                    
                     
                 # If there is data coming from the socket
                 elif interface == self.sock:
                     # Receive the data
                     data, addr = self.sock.recvfrom(MAX_BUFFER_SIZE)
                     print "Received:", data, "from", addr
-            
         
     def Placement(self):
         

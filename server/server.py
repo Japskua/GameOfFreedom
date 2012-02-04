@@ -5,7 +5,6 @@ Created on Feb 4, 2012
 '''
 
 import socket
-import struct
 
 ip = ""
 

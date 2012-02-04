@@ -4,7 +4,6 @@ Created on Feb 4, 2012
 @author: japskua
 '''
 
-import struct
 
 def AddCarriageLineReturnFeed(message):
     """
