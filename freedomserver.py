@@ -4,7 +4,7 @@ Created on Feb 4, 2012
 @author: Japskua
 '''
 
-import server
+from server import Server
 import getopt
 import sys
 
@@ -34,6 +34,6 @@ if verbose:
     print "Starting the server..."
 
 # Create the server class and put it to run
-freedom_server = server.Server(port, verbose)
+freedom_server = Server(port, verbose)
 freedom_server.ShowArgs()
 freedom_server.StartServer()
