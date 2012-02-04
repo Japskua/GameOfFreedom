@@ -5,16 +5,28 @@ Created on Feb 4, 2012
 '''
 
 import socket
+import select
+import sys
+
+from helpers import UnpackInteger
 
 ip = ""
 
+# DEFINES
+
+# Keyboard input
+STDIN = 0
 # Buffer size
 MAX_BUFFER_SIZE = 128
+
+server_running = True
 
 class Server(object):
     '''
     classdocs
     '''
+    
+    command_quit = "/quit"
 
 
     def __init__(self, port, verbose):
@@ -28,6 +40,16 @@ class Server(object):
         '''
         self.port = port
         self.verbose = verbose
+        
+        # Initialize the socket
+        self.sock = socket.socket(socket.AF_INET,    #IPv4
+                                  socket.SOCK_DGRAM) #UDP
+        
+        # Bind the socket
+        self.sock.bind( (ip, self.port) )
+        
+        # Create the client listing
+        self.listClients = []
         
         if self.verbose:
             print "Server Created Successfully!"
@@ -46,29 +68,91 @@ class Server(object):
         Starts the server main loop
         """
         
-        # Create the socket for the datagram
-        sock = socket.socket(socket.AF_INET,    #IPv4
-                             socket.SOCK_DGRAM) #UDP
-        
-        # Bind the socket
-        sock.bind( (ip, self.port) )
+        server_running = True
         
         if self.verbose:
             print "Server ready to listen"
+            
+        while server_running == True:
+            # Create the select
+            # Read interface is the only one existing (no errors nor writes)
+            # The read interfaces are the keyboard input and the UDP socket
+            input_interfaces = select.select([STDIN, self.sock], [], [])[0]
+            
+            # Check if any of the interfaces contain anything
+            for interface in input_interfaces:
+            
+                # If there is any keyboard input coming
+                if interface == STDIN:
+                    # Get the data from the keyboard
+                    server_running = self.HandleKeyboardInput()
+                    
+                    
+                # If there is data coming from the socket
+                elif interface == self.sock:
+                    self.HandleClientInput()
+                    
+        # After the server is over
+        print "Server Quiting..."
+                    
+    def HandleKeyboardInput(self):
+        """
+        Handles the keyboard input received from the
+        server "admin" ;-)
+        NOTE: Only command existing is /quit
+        @return: False if the quit command was given
+                 True otherwise
+        @rtype: Boolean
+        """
         
-        # Start running
-        while True:
-            data, addr = sock.recvfrom(MAX_BUFFER_SIZE)
-            print "Received message from:", addr
-            print "Message length was", len(data)
+        # First, read the keyboard input
+        keyboardInput = sys.stdin.readline()
+        
+        if self.verbose:
+            print "The command given was", keyboardInput
+        
+        # Then, check if the /quit command was given
+        if keyboardInput.startswith(Server.command_quit):
+            return False
+        
+        # Otherwise, just return false
+        return True
+    
+        
+        
+
+    def HandleClientInput(self):
+        """
+        Handles the input received from the client [from the socket]
+        """
+        
+        # Receive the data
+        data, addr = self.sock.recvfrom(MAX_BUFFER_SIZE)
+        
+        # If nothing was received, just go back
+        if data == None:
+            return 
+        
+        if self.verbose:
+            print "Received:", data, "from", addr
             
-            # Return the sent message
-            sock.sendto(data, addr)
-            
-            # Get the first value of the message
-            #value = str(4)
-            #value = struct.unpack(">ici", data)
-            #print "The message was of the type:", value
+        # Try to unpack the received info
+        #messageId = int(struct.unpack("!i", data[0:4])[0])
+        position = 0
+        messageId, position = UnpackInteger(data, position)
+        
+        if self.verbose:
+            print "MessageID:", messageId
+        
+        # Then, act accordingly
+        #################################
+        # VALUES THAT CAN BE RECEIVED FROM THE CLIENT
+        # 1 - MSG_JOIN
+        # 11 - MSG_PLACE
+        # 40 - MSG_QUIT
+        ################################
+        
+        
             
     
         

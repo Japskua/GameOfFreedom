@@ -4,11 +4,23 @@ Created on Feb 4, 2012
 @author: japskua
 '''
 
+"""
+Sources:
+http://docs.python.org/howto/sockets.html
+http://code.activestate.com/recipes/531824-chat-server-client-using-selectselect/
+http://docs.python.org/library/struct.html
+http://www.rhinocerus.net/forum/lang-python/577763-unpack-expects-wrong-number-bytes.html
+
+BEST ONE!!!
+http://docs.python.org/library/select.html#select.select
+"""
+
 import socket
 from messager import Messager
 import select
 from keyboardcontroller import KeyboardController
 import struct
+from helpers import UnpackInteger
 
 # DEFINES
 STDIN = 0
@@ -78,6 +90,9 @@ class Client(object):
         
         
     def HandleServerInput(self):
+        """
+        Handles all the messages received from the server
+        """
         # Receive the data
         data, addr = self.sock.recvfrom(MAX_BUFFER_SIZE)
         
@@ -194,6 +209,11 @@ class Client(object):
             elif errorType == 2:
                 print "Server Full!"
                 print "Error", errorMessage
+        
+        # Something else was received
+        else:
+            # Just stay quiet
+            pass
                 
         
     def DisplayBoard(self):
