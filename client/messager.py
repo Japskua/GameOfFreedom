@@ -4,7 +4,6 @@ Created on Feb 4, 2012
 @author: japskua
 '''
 
-from helpers import AddCarriageLineReturnFeed
 import struct
 
 MAX_BUFFER_SIZE = 128
@@ -15,10 +14,12 @@ class Messager(object):
     '''
 
 
-    def __init__(self):
+    def __init__(self, verbose):
         '''
         Constructor
         '''
+        self.verbose = verbose
+        
         # The packer class
         #self.struct = struct.Struct()
         
@@ -30,10 +31,11 @@ class Messager(object):
         @rtype: String
         """
         # Define the message ID
-        message = "1"
+        messageId = 1
+        message = struct.pack("!i", messageId)
         
         # Add the proper line endings
-        message = AddCarriageLineReturnFeed(message)
+        #message = AddCarriageLineReturnFeed(message)
         
         # Return the correct message
         return message
@@ -45,10 +47,11 @@ class Messager(object):
         @rtype: String
         """
         # First, define the message ID
-        message = "40"
+        messageId = 40
+        message = struct.pack("!i", messageId)
         
         # Add the proper line endings
-        message = AddCarriageLineReturnFeed(message)
+        #message = AddCarriageLineReturnFeed(message)
         
         # Return the correct message
         return message
@@ -66,11 +69,11 @@ class Messager(object):
         
 
         # First, define the message ID
-        id = 11
+        messageId = 11
         
         # Then, pack the values to the message
         #message = struct.pack("hh1", id, marker, position)
-        message = struct.pack('>ici', id, marker, position)
+        message = struct.pack('!ici', messageId, marker, position)
         
         # Finish of with nice CLRF ;-)
         #message = AddCarriageLineReturnFeed(message)
