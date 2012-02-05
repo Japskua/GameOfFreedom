@@ -100,6 +100,7 @@ class GameBoard(object):
         self.board[65] = GameBoard.MARKER_X
         self.board[75] = GameBoard.MARKER_X
         self.board[85] = GameBoard.MARKER_X
+        self.board[95] = GameBoard.MARKER_X
         
         self.DisplayBoard()
         
@@ -136,12 +137,11 @@ class GameBoard(object):
         """
         points = 0
         
-        listColumns = [0, 10, 20, 30, 40, 50, 60, 70]
+        listColumns = [0, 10, 20, 30, 40, 50, 60]
         
         # Loop through the vertical column until the 7th value
         # (underneath that there cannot be anymore full columns
         for position in listColumns:
-            print "pos:", position+columnStart,
             # Get the points for the full column
             points += self.CheckIfVerticalSame(marker, position+columnStart)
         
@@ -149,6 +149,46 @@ class GameBoard(object):
         return points
     
     
+    def CheckIfPreviousVerticalScore(self, listScored, position):
+        """
+        Checks whether the previous 4 vertical stones have been scored,
+        in which situation return True to signify, that the stone should be
+        added to the list as one extra, instead of calculating 4 points again
+        """
+        numbersFound = 0
+
+        
+        
+        print "Look for predecessors for", position        
+        # Loop trough the given list
+        for value in listScored:
+            print value
+            # If the values are previous column numbers
+            if ((value == position-10) or (value == position-20) or
+                (value == position-30) or (value == position-40)):
+                # Add the number of found by 1
+                numbersFound+=1
+                
+                
+        print "Found", numbersFound, "numbers"
+        # If the number found was 4
+        if numbersFound == 4:
+            return True
+        
+        # Otherwise, return False
+        return False
+        
+    def GetScoringListByMarker(self, marker):
+        """
+        Gets the scoring list in question by the marker in use
+        """
+        if marker == GameBoard.MARKER_X:
+            # Return the x list
+            return self._listScoredX
+        elif marker == GameBoard.MARKER_O:
+            # Return the o list
+            return self._listScoredY
+        
     
     def CheckIfVerticalSame(self, marker, position):
         """
@@ -159,7 +199,23 @@ class GameBoard(object):
         # If the values are the same for each column value (the columns go down in steps of 10
         if ((self.board[position] == marker) and (self.board[position+10] == marker)
             and (self.board[position+20] == marker) and (self.board[position+30] == marker)):
-            return 4
+            # Get the scoring list
+            scoringList = self.GetScoringListByMarker(marker)
+            # Then, check if the stone is part of already formed 5 long list
+            if self.CheckIfPreviousVerticalScore(scoringList, position+30) == False:
+                # If it is not part of the list
+                # Add the values to the scoring list
+                scoringList.append(position)
+                scoringList.append(position+10)
+                scoringList.append(position+20)
+                scoringList.append(position+30)
+                # And return 4 points
+                return 4
+            else:
+                # Otherwise, add the value to the scoringList 
+                scoringList.append(position)
+                # and just return 1 more point
+                return 1
         
         # Otherwise, return 0 points
         return 0
