@@ -27,6 +27,9 @@ class GameBoard(object):
         self._lastPlacement = None
         self._availablePositions = []
         
+        self._listScoredX = []
+        self._listScoredY = []
+        
     def CreateBoard(self):
         """
         Creates a new empty board
@@ -92,8 +95,118 @@ class GameBoard(object):
         scorePlayer1 = 0
         scorePlayer2 = 0
         
+        # Set the playerX to score vertical
+        self.board[55] = GameBoard.MARKER_X
+        self.board[65] = GameBoard.MARKER_X
+        self.board[75] = GameBoard.MARKER_X
+        self.board[85] = GameBoard.MARKER_X
+        
+        self.DisplayBoard()
+        
+        # Get the horizontal points for both of the players
+        scorePlayer1 += self.CheckHorizontal(GameBoard.MARKER_X)
+        scorePlayer2 += self.CheckHorizontal(GameBoard.MARKER_O) 
+        
+        # Get the vertical points for both of the players
+        scorePlayer1 += self.CheckVertical(GameBoard.MARKER_X)
+        #scorePlayer2 += self.CheckVertical(GameBoard.MARKER_O)
+        
+        
         
         return scorePlayer1, scorePlayer2
+    
+    def CheckVertical(self, marker):
+        """
+        Checks if the given marker exists in the vertical column
+        of four
+        """
+        points = 0
+        
+        # Loop through all the columns
+        for column in range(0, 10):
+            # The columns jump in times of ones (0,1,2,3, etc..)
+            points += self.CheckVerticalColumn(marker, column)
+        
+        # Return the points
+        return points
+    
+    def CheckVerticalColumn(self, marker, columnStart):
+        """
+        Checks the vertical column for points
+        """
+        points = 0
+        
+        listColumns = [0, 10, 20, 30, 40, 50, 60, 70]
+        
+        # Loop through the vertical column until the 7th value
+        # (underneath that there cannot be anymore full columns
+        for position in listColumns:
+            print "pos:", position+columnStart,
+            # Get the points for the full column
+            points += self.CheckIfVerticalSame(marker, position+columnStart)
+        
+        # Return the points
+        return points
+    
+    
+    
+    def CheckIfVerticalSame(self, marker, position):
+        """
+        Checks if the next 4 values are the same for all
+        4 stones in the column
+        """
+        
+        # If the values are the same for each column value (the columns go down in steps of 10
+        if ((self.board[position] == marker) and (self.board[position+10] == marker)
+            and (self.board[position+20] == marker) and (self.board[position+30] == marker)):
+            return 4
+        
+        # Otherwise, return 0 points
+        return 0
+    
+    def CheckHorizontal(self, marker):
+        """
+        Checks if the given marker exists in the row of four
+        in a horizontal way
+        """
+        points = 0
+        # Loop through all the rows
+        for row in range(0, 10):
+            # The row placement jumps in times of tens (0, 10, 20, etc...)
+            points += self.CheckHorizontalRow(marker, row*10)
+        
+        return points
+        
+    def CheckHorizontalRow(self, marker, rowStart):
+        """
+        Checks if the given row has horizontal points for the
+        given marker
+        """
+        points = 0
+        
+        for position in range(rowStart, rowStart+8):
+            points += self.CheckIfHorizontalSame(marker, position)
+        
+        # Return the points
+        return points
+        
+    def CheckIfHorizontalSame(self, marker, position):
+        """
+        Checks if the horizontal position is the same for all
+        sequential 4 stones
+        """
+        
+        # If the values are the same
+        if ((self.board[position] == marker) and (self.board[position+1] == marker)
+            and (self.board[position+2] == marker) and (self.board[position+3] == marker)):
+            # Return 4 points
+            return 4
+        
+        # Otherwise, return 0 points
+        return 0
+        
+        
+            
     
     def GetNextPossiblePlacement(self):
         """

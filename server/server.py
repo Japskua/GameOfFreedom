@@ -38,7 +38,7 @@ class Server(object):
     STATE_PLAYING = 1
     STATE_SCORING = 2
     
-    MAX_TURNS = 10
+    MAX_TURNS = 2
 
     def __init__(self, port, verbose):
         '''
