@@ -20,6 +20,7 @@ from messager import Messager
 import select
 from keyboardcontroller import KeyboardController
 from helpers import UnpackInteger, UnpackChar, GameBoard
+import sys
 
 # DEFINES
 STDIN = 0
@@ -89,8 +90,7 @@ class Client(object):
                     # If other than None was received
                     if message != None:
                         # send the generated message to the server
-                        self.SendMessage(message)
-                    
+                        self.SendMessage(message)                    
                     
                 # If there is data coming from the socket
                 elif interface == self.sock:
@@ -129,6 +129,7 @@ class Client(object):
         # 21 - MSG_GAME_END
         # 22 - MSG_BOARD
         # 30 - MSG_ERROR
+        # 41 - MSG_QUIT_ACK
         ################################
         
         # MSG_ACCEPT
@@ -193,9 +194,13 @@ class Client(object):
             # Get the reason for the end of the game
             endReason, pointer = UnpackInteger(messageBuffer, pointer)
             
+            print "Game Over"
+            print "Reason:",
+            
             # Inform the player of the end reaons
             if endReason == Client.ENDTYPE_LEAVE:
                 print "Player Left"
+                print "YOU WON!"
                 
             elif endReason == Client.ENDTYPE_TURNS:
                 print "Turns full"
@@ -233,6 +238,12 @@ class Client(object):
             # An unknown error code was received
             else:
                 print "Undefined error code:", errorType
+        
+        # MSG QUIT_ACK
+        elif messageId == 41:
+            # Quit
+            print "Quiting the game"
+            sys.exit()
         
         # Something else was received
         else:

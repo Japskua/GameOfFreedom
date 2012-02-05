@@ -13,6 +13,7 @@ from player import Player
 from messages import *
 import exceptions
 from random import Random
+from warnings import catch_warnings
 
 ip = ""
 
@@ -37,7 +38,7 @@ class Server(object):
     STATE_PLAYING = 1
     STATE_SCORING = 2
     
-    MAX_TURNS = 100
+    MAX_TURNS = 2
 
     def __init__(self, port, verbose):
         '''
@@ -183,6 +184,7 @@ class Server(object):
         
         # MSG_JOIN
         if messageId == 1:
+            print "self.state is", self.state
             # If the state is WAITING
             if self.state == Server.STATE_WAITING:
                 # Handle the join attempt
@@ -201,8 +203,6 @@ class Server(object):
                 print "Received message 11 - State is:", self.state
             # If the state in question is playing (otherwise don't react)
             if self.state == Server.STATE_PLAYING:
-                if self.verbose:
-                    print "Message ok & state is playing!"
                 # Check that the message came from correct player
                 if self.CheckCorrectPlayer(addr) == True:
                     # If everything was okay
@@ -219,7 +219,18 @@ class Server(object):
         elif messageId == 40:
             # Quit the player
             
-            pass
+            # Check if the player was found
+            if (self.FindPlayer(addr) != False):
+            
+                # Figure who was the player that sent the message
+                player = self.FindPlayer(addr)
+                self.RemovePlayer(player)
+                
+                # Send the victory message to the other player
+                self.InformPlayerForfeit()
+                
+                # Set state the WAITING
+                self.ChangeState(Server.STATE_WAITING)
         
         # Otherwise
         else:
@@ -229,6 +240,43 @@ class Server(object):
     
         # <---------- End of HandleClientInput() -----------> #
         
+    def InformPlayerForfeit(self):
+        """
+        Informs the other player that player has left the game
+        and forfeited.
+        """
+        
+        message = CreateGameEndMessage(GameEndReasonEnum.PLAYER_LEFT)
+        
+        # Send the message to the client left
+        SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), message)
+        
+        # Remove the other player as well
+        self.RemovePlayer(0)
+        
+        
+    def FindPlayer(self, addr):
+        """
+        Finds the number of the player in question
+        @return: Number of the client in question if found
+                 False if nothing was found
+        """
+        # Loop through all the clients
+        for clientNumber in range(0,2):
+            # Check if the IP matches
+            try:
+                if self.listClients[clientNumber].GetIp() == addr[0]:
+                    # Check if the port matches
+                    if self.listClients[clientNumber].GetPort() == addr[1]:
+                        # Return the client number
+                        return clientNumber
+            except Exception:
+                pass
+            
+                
+        return False
+                    
+    
     def HandlePlayerPlacement(self, data, position):
         """
         Handles the player movement
@@ -262,6 +310,13 @@ class Server(object):
         
         # Check if this was the last turn
         if self.turn == Server.MAX_TURNS:
+            # Send message for game end
+            message = CreateErrorMessage(GameEndReasonEnum.TURNS_FULL)
+            # Send the message
+            SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), message)
+            SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), message)
+            
+            # Then, change state to SCORING
             self.ChangeState(Server.STATE_SCORING)
             return
             
@@ -323,11 +378,22 @@ class Server(object):
         # Otherwise, the right client send the message
         return True
     
-    def RemovePlayer(self, player):
+    def RemovePlayer(self, playerNumber):
         """
         Removes the player from the server and nulls the information
         """
-        raise NotImplementedError()
+        # Search for the player that has the same port
+        print playerNumber
+        player = self.listClients[playerNumber]
+
+        # Create the quit message
+        message = CreateQuitMessage()
+        # Send the message
+        SendMessage(self.sock, player.GetIp(), player.GetPort(), message)
+        
+        # And finally remove the player from the list
+        self.listClients.remove(player)
+
         
     def DecidePlayerMarkers(self):
         """
@@ -427,7 +493,13 @@ class Server(object):
         if state == self.STATE_WAITING:
             if self.verbose:
                 print "Changing to state", state
-            # Do something
+            
+            # Remove the players from the list
+            for player in self.listClients:
+                self.listClients.remove(player)
+                
+            # Change the state
+            self.state = Server.STATE_WAITING
             return
         
         elif state == self.STATE_PLAYING:

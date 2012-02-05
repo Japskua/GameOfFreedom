@@ -7,12 +7,17 @@ Created on Feb 5, 2012
 import struct
 import ctypes
 
+
 # ENUM
 
 class ErrorEnum(object):
     ERR_PLACEMENT = 1
     ERR_FULL = 2
     ERR_ALREADYJOINED = 3
+    
+class GameEndReasonEnum(object):
+    TURNS_FULL = 1
+    PLAYER_LEFT = 2
 
 
 def SendMessage(socket, ip, port, message):
@@ -47,6 +52,35 @@ def CreateAcceptMessage():
     
     # Return the correct message
     return message
+
+def CreateGameEndMessage(endReason):
+    """
+    Creates the game end message 
+    that can be sent to both of the players
+    that contains the reason for game end
+    @param endReason: The reason for the game end
+    @type endReason: enum GameEndReason
+    """
+    reasonNumer = -1
+    
+    if endReason == GameEndReasonEnum.TURNS_FULL:
+        reasonNumber = 0
+    elif endReason == GameEndReasonEnum.PLAYER_LEFT:
+        reasonNumber = 1
+    else:
+        # Reason does not exist
+        raise NotImplementedError()
+    
+    # Create the message
+    messageId = 21
+    
+    # Pack the message
+    message = struct.pack("!ii", messageId, reasonNumber)
+    
+    # Return the message
+    return message 
+    
+    
 
 def CreateErrorMessage(errorType):
     """
@@ -160,6 +194,21 @@ def CreateScoreMessage(points1, points2, winner):
     # Create the message
     message = struct.pack("!icicic", messageId, "x", points1,
                           "o", points2, winner)
+    
+    # Return the message
+    return message
+
+def CreateQuitMessage():
+    """
+    Creates the quit message that will be sent to the
+    client in question
+    """
+    
+    # Define the message ID
+    messageId = 41
+    
+    # Create the message
+    message = struct.pack("!i", messageId)
     
     # Return the message
     return message
