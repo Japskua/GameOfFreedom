@@ -75,7 +75,11 @@ class GameBoard(object):
         # Loop through the whole list
         for position in range(0,100):
             if (position == 0):
-                print "|", self.board[position], 
+                print "| ", self.board[position], 
+                if self.verbose:
+                    print position,
+            elif (position < 9):
+                print "| ", self.board[position],
                 if self.verbose:
                     print position,
             elif (position == 99):
@@ -85,10 +89,17 @@ class GameBoard(object):
                 print "|"
             # If the value is not divisible by 9
             elif self.CheckIfRightCorner(position) == True:
-                print "|", self.board[position], 
-                if self.verbose:
-                    print position, 
-                print "|"
+                if position == 9:
+                    print "| ", self.board[position],
+                    if self.verbose:
+                        print position, 
+                    print "|"
+                else:
+                    print "|", self.board[position], 
+                    if self.verbose:
+                        print position, 
+                    print "|"
+                
             else:
                 # Display the markers
                 print "|", self.board[position], 
