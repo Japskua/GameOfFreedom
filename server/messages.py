@@ -5,6 +5,7 @@ Created on Feb 5, 2012
 '''
 
 import struct
+import ctypes
 
 # ENUM
 
@@ -86,7 +87,7 @@ def CreateGameStartMessage(marker):
     # Return the message
     return message
 
-def CreateTurnMessage(freePlaces, listPlaces):
+def CreateTurnMessage(freePlaces, listPlaces, verbose=False):
     """
     Creates the turn message for the player
     @param freePlaces: Amount of free places 
@@ -102,6 +103,27 @@ def CreateTurnMessage(freePlaces, listPlaces):
     # Define the message ID
     messageId = 10
     
+    # Create the struct where to save the magic
+    s = struct.Struct("!ii" + freePlaces*"i")
+    
+    # The values are
+    values = (messageId, freePlaces)
+    
+    # Create the buffer
+    message = ctypes.create_string_buffer(s.size)
+    
+    if verbose:
+        print "Struct size is:", s.size    
+    
+    # The magical pointer trick ;-) 
+    s.pack_into(message, 0, *values)
+    
+    # And continue the magic!
+    if freePlaces > 0:
+        # Add the list place to the message
+        for n in range(0, freePlaces):
+            s.pack_into(message, 8+n, listPlaces[n])
+    """
     # Create the message
     message = struct.pack("!ii", messageId, freePlaces)
     
@@ -110,6 +132,8 @@ def CreateTurnMessage(freePlaces, listPlaces):
         # Add the list places to the message
         for n in range(0, freePlaces):
             struct.pack_into("!i", message, 8+n, listPlaces[n])
+            
+    """        
         
     # Return the message
     return message
@@ -140,7 +164,7 @@ def CreateScoreMessage(points1, points2, winner):
     # Return the message
     return message
 
-def CreateBoardMessage(gameboard):
+def CreateBoardMessage(gameboard, verbose=False):
     """
     Creates the board message to be sent to the players
     @param gameboard: The complete gameboard of the game
@@ -152,14 +176,27 @@ def CreateBoardMessage(gameboard):
     
     # Define the message ID
     messageId = 22
+
     
-    # Create the message
-    message = struct.pack("!i", messageId)
+    # Create the struct where to save the magic
+    s = struct.Struct("!i 100s")
     
-    # Pack the values from the game board
-    for n in range(0,99):
-        struct.pack_into("!c", message, 4+n, gameboard[n])
+    # Create the buffer string
+    message = ctypes.create_string_buffer(s.size)
+    
+    if verbose:
+        print "Struct size is:", s.size
+    
+    value = ""
+    
+    # Loop through the whole list
+    for i in range(0, 100):
+        value = value + gameboard[i]
         
+    # Do THE MAGIC!
+    s.pack_into(message, 0, messageId, value)
+    
+
+    
     # Return the message
     return message
-    

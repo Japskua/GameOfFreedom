@@ -341,6 +341,12 @@ class Server(object):
             # And display it
             self.gameBoard.DisplayBoard()
             # Finally, send the game started message to the first player
+            
+            # Send the board message to both of the players
+            self.SendBoardMessage()
+            
+            # Then, send the turn to player number 1
+            self.SendTurnMessage()
             return
         
         elif state == self.STATE_SCORING:
@@ -355,7 +361,36 @@ class Server(object):
             # Just return
             return
         
+    def SendTurnMessage(self):
+        """
+        Sends the turn message to the correct player
+        """
+        if self.verbose:
+            print "Creating the turn message"
+            
+        # Now, just display that all places are free
+        message = CreateTurnMessage(0, 0)
+        # Send the message to the client
+        SendMessage(self.sock, self.listClients[self.activePlayer].GetIp(), 
+                    self.listClients[self.activePlayer].GetPort(), message)
+
+        # Done sending the message
         
+    def SendBoardMessage(self):
+        """
+        Sends the board message to both of the players
+        """
+        if self.verbose:
+            print "Creating the board message"
+            
+        self.gameBoard.TryPlaceMarker(99, GameBoard.MARKER_X)
+        self.gameBoard.DisplayBoard()
+        # Create the message
+        boardMessage = CreateBoardMessage(self.gameBoard.GetBoard())
+        
+        # Send the message to both of the players
+        SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), boardMessage)
+        SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), boardMessage)
                 
     def CheckIfEnoughPlayersJoined(self):
         """

@@ -109,6 +109,7 @@ class Client(object):
         
         if self.verbose:
             print "Received:", messageBuffer, "from", addr
+            print "Buffersize:", len(messageBuffer)
             
         # Create the buffer pointer
         pointer = 0
@@ -202,12 +203,14 @@ class Client(object):
         
         # MSG_BOARD
         elif messageId == 22:
+            print "Pointer at start is:", pointer
             # Get the situation of the board
             for position in range(0, 100):
                 # Get the value on the board
                 marker, pointer = UnpackChar(messageBuffer, pointer)
                 self.gameboard.UpdateBoard(position, marker)
                 
+            print "Pointer at end is:", pointer
             # Then, display the board
             self.gameboard.DisplayBoard()
         

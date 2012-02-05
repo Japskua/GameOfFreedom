@@ -12,9 +12,9 @@ class GameBoard(object):
     (to store the board state)
     '''
 
-    MARKER_X = "X"
-    MARKER_O = "O"
-    MARKER_EMPTY = "-"
+    MARKER_X = 'X'
+    MARKER_O = 'O'
+    MARKER_EMPTY = '-'
 
     def __init__(self, verbose):
         '''

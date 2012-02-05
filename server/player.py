@@ -17,16 +17,23 @@ class Player(object):
         self.ip = ip
         self.port = port
         
-        self.marker = None
+        self._marker = None
+        self._turn = False
         
     def SetMarker(self, marker):
-        self.marker = marker
+        self._marker = marker
         
     def GetMarker(self):
-        return self.marker
+        return self._marker
         
     def GetIp(self):
         return self.ip
     
     def GetPort(self):
         return self.port
+    
+    def SetTurn(self, turn):
+        self._turn = turn
+        
+    def GetTurn(self):
+        return self._turn
