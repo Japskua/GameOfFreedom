@@ -8,7 +8,7 @@ import socket
 import select
 import sys
 
-from helpers import UnpackInteger, GameBoard
+from helpers import UnpackInteger, UnpackChar, GameBoard
 from player import Player
 from messages import *
 import exceptions
@@ -75,6 +75,8 @@ class Server(object):
         
         # Initialize the game board
         self.gameBoard = GameBoard(self.verbose)
+        
+        self.turn = 1
         
         if self.verbose:
             print "Server Created Successfully!"
@@ -193,10 +195,19 @@ class Server(object):
         
         # MSG_PLACE
         elif messageId == 11:
+            if self.verbose:
+                print "Received message 11 - State is:", self.state
             # If the state in question is playing (otherwise don't react)
             if self.state == Server.STATE_PLAYING:
-                # Do something
-                pass
+                if self.verbose:
+                    print "Message ok & state is playing!"
+                # Check that the message came from correct player
+                if self.CheckCorrectPlayer(addr) == True:
+                    # If everything was okay
+                    # Handle the player Movement
+                    self.HandlePlayerPlacement(data, position)
+                
+               
             # Otherwise, ignore
             else:
                 # Just pass
@@ -216,6 +227,90 @@ class Server(object):
     
         # <---------- End of HandleClientInput() -----------> #
         
+    def HandlePlayerPlacement(self, data, position):
+        """
+        Handles the player movement
+        """
+        if self.verbose:
+            print "Handling the player placement"
+        
+        # Get the player placement from the message
+        marker, position = UnpackChar(data, position)
+        
+        # Get the placement from the message
+        placement, position = UnpackInteger(data, position)
+        
+        # Try to place the marker
+        if self.gameBoard.TryPlaceMarker(placement, marker) == False:
+            # Send wrong placement message
+            message = CreateErrorMessage(ErrorEnum.ERR_PLACEMENT)
+            SendMessage(self.sock, self.listClients[self.activePlayer].GetIp(), 
+                        self.listClients[self.activePlayer].GetPort(), message)
+            
+        else:
+            # Change the turn to the other player
+            self.NextTurn()
+        
+    def NextTurn(self):
+        """
+        Changes the turn to the next player
+        """
+        # Send the board message to both of the players
+        self.SendBoardMessage()
+        
+        # Change the player
+        self.ChangePlayer()
+        
+        # Send the turn to the next player
+        self.SendTurnMessage()
+        
+        
+    def ChangePlayer(self):
+        """
+        Changes the active player to the second one
+        """
+        
+        # If the current active player was number 1
+        if self.activePlayer == 0:
+            # Set the turn for the current player false
+            self.listClients[0].SetTurn(False)
+            # And true for the other player
+            self.listClients[1].SetTurn(True)
+            self.activePlayer = 1
+        elif self.activePlayer == 1:
+            # Set the turn for the current player false
+            self.listClients[1].SetTurn(False)
+            # And true for the other player
+            self.listClients[0].SetTurn(True)
+            self.activePlayer = 0
+
+                
+        if self.verbose:
+            print "Changed active player to player number", self.activePlayer
+        
+    def IncrementTurns(self):
+        """
+        Adds 1 to the turns
+        """
+        self.turn += 1
+    
+    def CheckCorrectPlayer(self, addr):
+        """
+        Checks that the message received is from the correct player
+        """    
+        userIp = addr[0]
+        userPort = addr[1]
+        
+        # Check if the ip is the correct one
+        if userIp != self.listClients[self.activePlayer].GetIp():
+            return False
+        
+        if userPort != self.listClients[self.activePlayer].GetPort():
+            return False
+        
+        # Otherwise, the right client send the message
+        return True
+    
     def RemovePlayer(self, player):
         """
         Removes the player from the server and nulls the information
@@ -347,6 +442,12 @@ class Server(object):
             
             # Then, send the turn to player number 1
             self.SendTurnMessage()
+            
+            # And finally, change the state
+            self.state = state
+                        
+            if self.verbose:
+                print "State is now:", self.STATE_PLAYING
             return
         
         elif state == self.STATE_SCORING:

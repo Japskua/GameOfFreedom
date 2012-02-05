@@ -154,20 +154,23 @@ class Client(object):
             # Get the size of the received message
             freePlaces, pointer = UnpackInteger(messageBuffer, pointer)
         
-            print "You have", freePlaces, "free places to put your marker"
+            if freePlaces == 0:
+                print "Free Placement, choose whatever you like"
+            else:
+                print "You have", freePlaces, "free places to put your marker"
           
-            # Empty the previous availablePosition list
-            self.availablePosition = []
-            
-            # Loop through all the free places
-            for i in range(0,freePlaces):
-                # Get the value in question
-                value, pointer = UnpackInteger(messageBuffer, pointer)
-                self.availablePosition.append(value)
+                # Empty the previous availablePosition list
+                self.availablePosition = []
                 
-            # And then display all the available position
-            for entry in self.availablePosition:
-                print entry
+                # Loop through all the free places
+                for i in range(0,freePlaces):
+                    # Get the value in question
+                    value, pointer = UnpackInteger(messageBuffer, pointer)
+                    self.availablePosition.append(value)
+                    
+                # And then display all the available position
+                for entry in self.availablePosition:
+                    print entry
         
         # MSG_SCORE
         elif messageId == 20:
