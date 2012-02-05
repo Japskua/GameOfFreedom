@@ -19,8 +19,7 @@ import socket
 from messager import Messager
 import select
 from keyboardcontroller import KeyboardController
-import struct
-from helpers import UnpackInteger
+from helpers import UnpackInteger, UnpackChar
 
 # DEFINES
 STDIN = 0
@@ -34,6 +33,11 @@ class Client(object):
     '''
     ENDTYPE_TURNS = 0
     ENDTYPE_LEAVE = 1
+    
+    STATE_IDLE = 0
+    STATE_WAITING = 1
+    STATE_PLAYING = 2
+    STATE_SCORING = 3
 
     def __init__(self, host, port, verbose):
         '''
@@ -58,6 +62,9 @@ class Client(object):
         
         # Create the board
         self.board = []
+        
+        # Set own state to be idle
+        self.state = Client.STATE_IDLE
         
     def StartClient(self):
         """
@@ -94,16 +101,18 @@ class Client(object):
         Handles all the messages received from the server
         """
         # Receive the data
-        data, addr = self.sock.recvfrom(MAX_BUFFER_SIZE)
+        messageBuffer, addr = self.sock.recvfrom(MAX_BUFFER_SIZE)
         
-        if data == None:
+        if messageBuffer == None:
             return 
         
         if self.verbose:
-            print "Received:", data, "from", addr
+            print "Received:", messageBuffer, "from", addr
             
+        # Create the buffer pointer
+        pointer = 0
         # Try to unpack the received info
-        messageId = int(struct.unpack("!i", data[0:4])[0])
+        messageId, pointer = UnpackInteger(messageBuffer, pointer)
         
         if self.verbose:
             print "MessageID:", messageId
@@ -123,21 +132,25 @@ class Client(object):
         # MSG_ACCEPT
         if messageId == 2:
             # Accepted to the game
+            # Set own state to be waiting
+            self.state = Client.STATE_WAITING
             print "Connection created Succesfully. Now waiting for the game to start..."
+            
         
         # MSG_GAME_START
         elif messageId == 3:
             print "Game Started!"
-            
             # Get the player marker
-            self.marker = struct.unpack("!c", data[5:6])[0]
+            self.marker, pointer = UnpackChar(messageBuffer, pointer)
             # Inform the player of the assigned marker
             print "You are now playing with marker:", self.marker
+            # Set own state to be playing
+            self.state = Client.STATE_WAITING
         
         # MSG_TURN
         elif messageId == 10:
             # Get the size of the received message
-            freePlaces = int(struct.unpack("!i", data[5:8])[0])
+            freePlaces, pointer = UnpackInteger(messageBuffer, pointer)
         
             print "You have", freePlaces, "free places to put your marker"
           
@@ -147,9 +160,7 @@ class Client(object):
             # Loop through all the free places
             for i in range(0,freePlaces):
                 # Get the value in question
-                start = 9+i*3
-                end = start+3
-                value = int(struct.unpack("!i", data[start:end])[0])
+                value, pointer = UnpackInteger(messageBuffer, pointer)
                 self.availablePosition.append(value)
                 
             # And then display all the available position
@@ -158,21 +169,24 @@ class Client(object):
         
         # MSG_SCORE
         elif messageId == 20:
-            marker1 = struct.unpack("!c", data[5:6])[0]
-            points1 = int(struct.unpack("i", data[7:10])[0])
-            marker2 = struct.unpack("!c", data[11:12])[0]
-            points2 = int(struct.unpack("i", data[13:16])[0])
-            winner = struct.unpack("!c", data[17:18])[0]
+            marker1, pointer = UnpackChar(messageBuffer, pointer)
+            points1, pointer = UnpackInteger(messageBuffer, pointer)
+            marker2, pointer = UnpackChar(messageBuffer, pointer)
+            points2, pointer = UnpackInteger(messageBuffer, pointer)
+            winner, pointer = UnpackChar(messageBuffer, pointer)
             
             print "Player", marker1, "scored", points1, "points."
             print "Player", marker2, "scored", points2, "points."
             print "The winner of the game was:", winner
             
+            # And then set own state back to idle
+            self.state = Client.STATE_IDLE
+            
         
         # MSG_GAME_END
         elif messageId == 21:
             # Get the reason for the end of the game
-            endReason = int(struct.unpack("!i", data[5:8])[0])
+            endReason, pointer = UnpackInteger(messageBuffer, pointer)
             
             # Inform the player of the end reaons
             if endReason == Client.ENDTYPE_LEAVE:
@@ -181,15 +195,16 @@ class Client(object):
             elif endReason == Client.ENDTYPE_TURNS:
                 print "Turns full"
                 
+            # Set own state to be scoring
+            self.state = Client.STATE_SCORING
+                
         
         # MSG_BOARD
         elif messageId == 22:
             # Get the situation of the board
             for i in range(0, 99):
                 # Get the value on the board
-                start = i+5
-                end = start + 1
-                symbol = int(struct.unpack("!c", data[start:end])[0])
+                symbol, pointer = UnpackChar(messageBuffer, pointer)
                 self.board.append(symbol)
                 
             # Then, display the board
@@ -198,17 +213,19 @@ class Client(object):
         # MSG_ERROR
         elif messageId == 30:
             # Get the error type
-            errorType = int(struct.unpack("!i", data[5:9])[0])
-            # And get the error message
-            errorMessage = struct.unpack("!s", data[10:len(data)-1])[0]
+            errorType, pointer = UnpackInteger(messageBuffer, pointer)
             
             # Check what it was
             if errorType == 1:
                 print "Wrong Placement!"
-                print "Error:", errorMessage
             elif errorType == 2:
                 print "Server Full!"
-                print "Error", errorMessage
+            elif errorType == 3:
+                print "Already on the server!"
+            
+            # An unknown error code was received
+            else:
+                print "Undefined error code:", errorType
         
         # Something else was received
         else:

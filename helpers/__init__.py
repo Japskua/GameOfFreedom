@@ -1,2 +1,2 @@
 from helperfunctions import AddCarriageLineReturnFeed
-from helperfunctions import UnpackInteger
+from helperfunctions import UnpackInteger, UnpackChar, UnpackString

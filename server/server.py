@@ -10,7 +10,7 @@ import sys
 
 from helpers import UnpackInteger
 from player import Player
-from messages import SendMessage, CreateAcceptMessage
+from messages import ErrorEnum, SendMessage, CreateAcceptMessage, CreateErrorMessage
 
 ip = ""
 
@@ -30,6 +30,10 @@ class Server(object):
     
     command_quit = "/quit"
 
+    # The server states
+    STATE_WAITING = 0
+    STATE_PLAYING = 1
+    STATE_SCORING = 2
 
     def __init__(self, port, verbose):
         '''
@@ -60,6 +64,9 @@ class Server(object):
         
         # Create the client listing
         self.listClients = []
+        
+        # Set own state to waiting
+        self.state = Server.STATE_WAITING
         
         if self.verbose:
             print "Server Created Successfully!"
@@ -164,13 +171,28 @@ class Server(object):
         
         # MSG_JOIN
         if messageId == 1:
-            # Handle the join attempt
-            self.HandleClientJoin(addr)
+            # If the state is WAITING
+            if self.state == Server.STATE_WAITING:
+                # Handle the join attempt
+                self.HandleClientJoin(addr)
+            # Otherwise, send GAME_FULL Error
+            else:
+                # Create and send the message
+                message = CreateErrorMessage(ErrorEnum.ERR_FULL)
+                SendMessage(self.sock, addr[0], addr[1], message)
+                # And then return
+                return
         
         # MSG_PLACE
         elif messageId == 11:
-            # Do something
-            pass
+            # If the state in question is playing (otherwise don't react)
+            if self.state == Server.STATE_PLAYING:
+                # Do something
+                pass
+            # Otherwise, ignore
+            else:
+                # Just pass
+                pass
         
         # MSG_QUIT
         elif messageId == 40:
@@ -193,9 +215,11 @@ class Server(object):
             print "Client", clientAddress, "trying to join the server"
             
         # If there are more than two players already on the server
-        if len(self.listClients) > 2:
+        if len(self.listClients) >= 2:
+            # Create the error message
+            message = CreateErrorMessage(ErrorEnum.ERR_FULL)
             # Send a error message
-            print "NO ERROR MESAGE SENDING IMPLEMENTED!!!!"
+            SendMessage(self.sock, clientAddress[0], clientAddress[1], message)
             # And return
             return
             
@@ -207,7 +231,8 @@ class Server(object):
                 # If the port is the same as weell
                 if playerEntry.port == clientAddress[1]:
                     # Send error, that the player is already on the server
-                    print "NO ERROR MESSAGE FOR DUPLICATE PLAYERS IMPLEMENTED!!!!"
+                    message = CreateErrorMessage(ErrorEnum.ERR_ALREADYJOINED)
+                    SendMessage(self.sock, clientAddress[0], clientAddress[1], message)
                     # And return 
                     return
                 
@@ -217,16 +242,29 @@ class Server(object):
         
         if self.verbose:
             print "Added player:", player.ip, player.port
+            print "Server has now", len(self.listClients), "players"
         
         # Create the accept message
         message = CreateAcceptMessage()
         # And send the join message to the player
         SendMessage(self.sock, player.ip, player.port, message)
         
+        if self.CheckIfEnoughPlayersJoined() == True:
+            self.state = Server.STATE_PLAYING
+        
         
         # <---------- End of HandleClientJoin() -----------> #
             
                 
-            
+    def CheckIfEnoughPlayersJoined(self):
+        """
+        Checks if enough players (2) have joined to the server
+        @return: True if all players joined, False otherwise
+        @rtype: Boolean
+        """
+        if len(self.listClients) == 2:
+            return True
+        else:
+            return False
         
         

@@ -40,7 +40,7 @@ def UnpackInteger(messageBuffer, position):
     integer = int(struct.unpack("!i", messageBuffer[position:endPosition])[0])
     
     # Finally, return the integer and the position for next read bit
-    return integer, (endPosition+1)
+    return integer, endPosition
 
 def UnpackChar(messageBuffer, position):
     """
@@ -60,7 +60,7 @@ def UnpackChar(messageBuffer, position):
     character = struct.unpack("!c", messageBuffer[position:endPosition])[0]
     
     # Finally, return the character and the position for next read bit
-    return character, (endPosition+1)
+    return character, endPosition
 
 def UnpackString(messageBuffer, position):
     """
@@ -75,14 +75,14 @@ def UnpackString(messageBuffer, position):
     """
     
     # Get the size of the message buffer
-    bufferSize = len(messageBuffer)
+    endPosition = len(messageBuffer)
     
-    # Calculate the end position
-    endPosition = bufferSize - position
+    print "Start position:", position
+    print "End position:", endPosition
     
     # Unpack the string
     messageString = struct.unpack("!s", messageBuffer[position:endPosition])[0]
     
     # Finally, return the string and the position for next read bit
-    return messageString, (endPosition+1)
+    return messageString, endPosition
 
