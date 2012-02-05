@@ -74,10 +74,58 @@ class GameBoard(object):
                 if self.verbose:
                     print position,
             
-        #print self.board[99]
 
+    def TryPlaceMarker(self, position, marker):
+        """
+        This function is used to try to place a marker
+        at the given position.
+        @param position: The position at the game board
+        @type position: Integer
+        @param marker: The marker to place at the given position
+        @type marker: String ('X' or 'O')
+        @return: True if the placement was succesfull
+                 False if not
+        @rtype: Boolean
+        """
+        
+        if self.verbose:
+            print "Trying to place marker", marker, "at position", position
             
+        # Check if the given marker is correct
+        if (marker != GameBoard.MARKER_O) and (marker != GameBoard.MARKER_X):
+            if self.verbose:
+                print "The marker is neither 'X' nor 'O'"
+            # If not, return false
+            return False
+            
+        # Check if the place is empty
+        if self.board[position] != GameBoard.MARKER_EMPTY:
+            if self.verbose:
+                print "The placement position is not empty!"
+            # The place is not free, thus return false
+            return False
+        
+        # Otherwise, make the position to be the given one
+        self.board[position] = marker
+        
+        if self.verbose:
+            print "Placed the", marker, "successfully to", position
+        
+        # And return true as a mark of success
+        return True
 
+    def UpdateBoard(self, position, marker):
+        """
+        Updates the board to be the new defined board
+        """
         
+        # Set the position to be the given marker
+        self.board[position] = marker
         
+    
+    def GetBoard(self):
+        """
+        Returns the whole board for sending
+        """
+        return self.board
         

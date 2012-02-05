@@ -61,10 +61,8 @@ class Client(object):
         self.availablePosition = []
         
         # Create the board
-        self.board = []
         self.gameboard = GameBoard(self.verbose)
         self.gameboard.CreateBoard()
-        self.gameboard.DisplayBoard()
         
         # Set own state to be idle
         self.state = Client.STATE_IDLE
@@ -205,13 +203,13 @@ class Client(object):
         # MSG_BOARD
         elif messageId == 22:
             # Get the situation of the board
-            for i in range(0, 99):
+            for position in range(0, 100):
                 # Get the value on the board
-                symbol, pointer = UnpackChar(messageBuffer, pointer)
-                self.board.append(symbol)
+                marker, pointer = UnpackChar(messageBuffer, pointer)
+                self.gameboard.UpdateBoard(position, marker)
                 
             # Then, display the board
-            self.DisplayBoard()
+            self.gameboard.DisplayBoard()
         
         # MSG_ERROR
         elif messageId == 30:
@@ -234,12 +232,6 @@ class Client(object):
         else:
             # Just stay quiet
             pass
-                
-        
-    def DisplayBoard(self):
-        i = 0
-        for entry in self.board:
-            print i, entry
     
     def Placement(self):
         
