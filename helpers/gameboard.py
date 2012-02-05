@@ -256,6 +256,31 @@ class GameBoard(object):
         return False
         
         
+    def CheckIfInAvailablePositions(self, position):
+        """
+        Checks if the given position is within the 
+        boundaries of the available positions
+        """
+        
+        # Set the found value to be false
+        found = False
+        
+        # If the available positions is empty, return True 
+        # Because the placement is then free
+        if len(self._availablePositions) == 0:
+            return True
+        
+        # Check, if the given position is within the boudaries of the next free position
+        # Loop through the list
+        for value in self._availablePositions:
+            # If the position is found
+            if position == value:
+                # Set the found value to true
+                found = True
+                
+        # Return the found value
+        return found
+        
 
     def TryPlaceMarker(self, position, marker):
         """
@@ -272,6 +297,10 @@ class GameBoard(object):
         
         if self.verbose:
             print "Trying to place marker", marker, "at position", position
+            
+        # Check if the value is within the free placement boundaries
+        if self.CheckIfInAvailablePositions(position) == False:
+            return False
             
         # Check if the given marker is correct
         if (marker != GameBoard.MARKER_O) and (marker != GameBoard.MARKER_X):
