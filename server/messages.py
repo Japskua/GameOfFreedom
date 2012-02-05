@@ -6,6 +6,8 @@ Created on Feb 5, 2012
 
 import struct
 import ctypes
+from ctypes import ARRAY
+import array
 
 
 # ENUM
@@ -121,7 +123,7 @@ def CreateGameStartMessage(marker):
     # Return the message
     return message
 
-def CreateTurnMessage(freePlaces, listPlaces, verbose=False):
+def CreateTurnMessage(listPlaces, verbose=False):
     """
     Creates the turn message for the player
     @param freePlaces: Amount of free places 
@@ -137,11 +139,11 @@ def CreateTurnMessage(freePlaces, listPlaces, verbose=False):
     # Define the message ID
     messageId = 10
     
+    # Get the length of the place list
+    freePlaces = len(listPlaces)    
+    
     # Create the struct where to save the magic
     s = struct.Struct("!ii" + freePlaces*"i")
-    
-    # The values are
-    values = (messageId, freePlaces)
     
     # Create the buffer
     message = ctypes.create_string_buffer(s.size)
@@ -149,25 +151,21 @@ def CreateTurnMessage(freePlaces, listPlaces, verbose=False):
     if verbose:
         print "Struct size is:", s.size    
     
+    # Create the basic values table
+    values = []
+    values.append(messageId)
+    values.append(freePlaces)
+    
+    # If the free places is bigger than 0
+    if freePlaces > 0:
+        # Loop through the list
+        for value in listPlaces:
+            # And append the value
+            values.append(value)
+            
     # The magical pointer trick ;-) 
     s.pack_into(message, 0, *values)
-    
-    # And continue the magic!
-    if freePlaces > 0:
-        # Add the list place to the message
-        for n in range(0, freePlaces):
-            s.pack_into(message, 8+n, listPlaces[n])
-    """
-    # Create the message
-    message = struct.pack("!ii", messageId, freePlaces)
-    
-    # If there are more than 0 places free for placement
-    if freePlaces > 0:
-        # Add the list places to the message
-        for n in range(0, freePlaces):
-            struct.pack_into("!i", message, 8+n, listPlaces[n])
-            
-    """        
+
         
     # Return the message
     return message

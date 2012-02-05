@@ -25,6 +25,7 @@ class GameBoard(object):
         self.board = []
         
         self._lastPlacement = None
+        self._availablePositions = []
         
     def CreateBoard(self):
         """
@@ -101,14 +102,18 @@ class GameBoard(object):
         to inform of his/her possible movements
         """
         position = self.GetLastPlacement()    
+        listPlaces = []
         
         if self.verbose:
             print "Getting the next possible placement"
             print "Previous placement was", position
             
+        # If the last placement was None, then retun 
+        # the empty listPlaces
+        if position == None:
+            return listPlaces
         
         
-        listPlaces = []
         
         # Get the 3-NN Tiles
         listAbove = self.Get3Above(position)
@@ -151,8 +156,11 @@ class GameBoard(object):
                 print value,
             print "\nMaking total of", len(listPlaces), "places"
         
+        # Set the available positions checker to be the same as the listPlaces
+        self._availablePositions = listPlaces
+        
         # Finally, return the list gained
-        return listPlaces
+        return self._availablePositions
     
     def Get3Below(self, position):
         """

@@ -576,10 +576,9 @@ class Server(object):
         # Get the free places
         listPlaces = self.gameBoard.GetNextPossiblePlacement()
         
+        # Create a message with the proper amount of placements
+        message = CreateTurnMessage(listPlaces, True)
         
-        
-        # Now, just display that all places are free
-        message = CreateTurnMessage(0, 0)
         # Send the message to the client
         SendMessage(self.sock, self.listClients[self.activePlayer].GetIp(), 
                     self.listClients[self.activePlayer].GetPort(), message)
@@ -593,7 +592,6 @@ class Server(object):
         if self.verbose:
             print "Creating the board message"
             
-        self.gameBoard.TryPlaceMarker(99, GameBoard.MARKER_X)
         self.gameBoard.DisplayBoard()
         # Create the message
         boardMessage = CreateBoardMessage(self.gameBoard.GetBoard())

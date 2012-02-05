@@ -169,9 +169,7 @@ class Client(object):
                     value, pointer = UnpackInteger(messageBuffer, pointer)
                     self.availablePosition.append(value)
                     
-                # And then display all the available position
-                for entry in self.availablePosition:
-                    print entry
+                self.DisplayAvailablePositions()
         
         # MSG_SCORE
         elif messageId == 20:
@@ -249,7 +247,27 @@ class Client(object):
         else:
             # Just stay quiet
             pass
-    
+        
+    def DisplayAvailablePositions(self):
+        """
+        Displays the available positions of received from the server
+        """
+        
+        last = len(self.availablePosition)
+        
+        # Loop through the list
+        for i in range(0, last):
+            # If the is the last value
+            if i == last-1:
+                print self.availablePosition[i]
+            else:
+                print self.availablePosition[i],
+        """
+        # And then display all the available position
+        for entry in self.availablePosition:
+            # If this is the last entry in the list
+            print entry
+        """
     def Placement(self):
         
         message = self.messager.CreatePlaceMessage("x", 54)
