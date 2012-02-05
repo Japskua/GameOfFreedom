@@ -74,6 +74,16 @@ class GameBoard(object):
                 if self.verbose:
                     print position,
             
+    def CalculateScore(self):
+        """
+        Calculates the game scores from the board
+        """
+        scorePlayer1 = 0
+        scorePlayer2 = 0
+        
+        
+        return scorePlayer1, scorePlayer2
+        
 
     def TryPlaceMarker(self, position, marker):
         """

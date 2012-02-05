@@ -36,6 +36,8 @@ class Server(object):
     STATE_WAITING = 0
     STATE_PLAYING = 1
     STATE_SCORING = 2
+    
+    MAX_TURNS = 100
 
     def __init__(self, port, verbose):
         '''
@@ -255,6 +257,16 @@ class Server(object):
         """
         Changes the turn to the next player
         """
+        # Advance the turns by one
+        self.IncrementTurns()
+        
+        # Check if this was the last turn
+        if self.turn == Server.MAX_TURNS:
+            self.ChangeState(Server.STATE_SCORING)
+            return
+            
+        # Otherwise, keep on going
+        
         # Send the board message to both of the players
         self.SendBoardMessage()
         
@@ -453,7 +465,25 @@ class Server(object):
         elif state == self.STATE_SCORING:
             if self.verbose:
                 print "Changing to state", state
-            # Do something
+                
+            # Calculate the scores
+            player1Score, player2Score = self.gameBoard.CalculateScore()
+            
+            winner = "-"
+            
+            # Get the winner
+            if player1Score > player2Score:
+                winner = "X"
+            elif player2Score > player1Score:
+                winner = "O"
+            else:
+                winner = "-"
+            
+            # Create the score message
+            scoreMessage = CreateScoreMessage(player1Score, player2Score, winner)
+            # Send the message to both of the players
+            SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), scoreMessage)
+            SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), scoreMessage)
             return
         
         else:
@@ -461,6 +491,8 @@ class Server(object):
                 print "Received something weird as state change!", state
             # Just return
             return
+        
+    
         
     def SendTurnMessage(self):
         """
