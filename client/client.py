@@ -19,7 +19,7 @@ import socket
 from messager import Messager
 import select
 from keyboardcontroller import KeyboardController
-from helpers import UnpackInteger, UnpackChar
+from helpers import UnpackInteger, UnpackChar, GameBoard
 
 # DEFINES
 STDIN = 0
@@ -62,6 +62,9 @@ class Client(object):
         
         # Create the board
         self.board = []
+        self.gameboard = GameBoard(self.verbose)
+        self.gameboard.CreateBoard()
+        self.gameboard.DisplayBoard()
         
         # Set own state to be idle
         self.state = Client.STATE_IDLE

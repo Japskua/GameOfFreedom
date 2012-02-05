@@ -8,7 +8,7 @@ import socket
 import select
 import sys
 
-from helpers import UnpackInteger
+from helpers import UnpackInteger, GameBoard
 from player import Player
 from messages import *
 import exceptions
@@ -69,6 +69,12 @@ class Server(object):
         
         # Set own state to waiting
         self.state = Server.STATE_WAITING
+        
+        # The game related info
+        self.activePlayer = 0
+        
+        # Initialize the game board
+        self.gameBoard = GameBoard(self.verbose)
         
         if self.verbose:
             print "Server Created Successfully!"
@@ -232,10 +238,13 @@ class Server(object):
         if choice == 0:
             self.listClients[0].SetMarker('X')
             self.listClients[1].SetMarker('O')
+            # Set the active player to be the first one
+            self.activePlayer = 0
         # Otherwise, do the opposite
         else:
             self.listClients[0].SetMarker('O')
             self.listClients[1].SetMarker('X')
+            self.activePlayer = 1
             
         # Inform of the choices
         if self.verbose:
@@ -327,7 +336,11 @@ class Server(object):
             SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), message1)
             SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), message2)
             
-            # Do something
+            # Create the board
+            self.gameBoard.CreateBoard()
+            # And display it
+            self.gameBoard.DisplayBoard()
+            # Finally, send the game started message to the first player
             return
         
         elif state == self.STATE_SCORING:
