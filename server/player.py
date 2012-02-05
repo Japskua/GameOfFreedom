@@ -6,7 +6,7 @@ Created on Feb 5, 2012
 
 class Player(object):
     '''
-    classdocs
+    The Player Object of the player in question
     '''
 
 
@@ -25,3 +25,8 @@ class Player(object):
     def GetMarker(self):
         return self.marker
         
+    def GetIp(self):
+        return self.ip
+    
+    def GetPort(self):
+        return self.port

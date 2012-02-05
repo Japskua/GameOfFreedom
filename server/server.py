@@ -10,7 +10,9 @@ import sys
 
 from helpers import UnpackInteger
 from player import Player
-from messages import ErrorEnum, SendMessage, CreateAcceptMessage, CreateErrorMessage
+from messages import *
+import exceptions
+from random import Random
 
 ip = ""
 
@@ -51,14 +53,14 @@ class Server(object):
         try:
             self.sock = socket.socket(socket.AF_INET,    #IPv4
                                       socket.SOCK_DGRAM) #UDP
-        except:
+        except exceptions:
             print "Unable to create the socket!"
             sys.exit()
             
         # Bind the socket
         try:
             self.sock.bind( (ip, self.port) )
-        except:
+        except exceptions:
             print "Unable to bind the socket"
             sys.exit()
         
@@ -197,6 +199,7 @@ class Server(object):
         # MSG_QUIT
         elif messageId == 40:
             # Quit the player
+            
             pass
         
         # Otherwise
@@ -206,6 +209,38 @@ class Server(object):
             
     
         # <---------- End of HandleClientInput() -----------> #
+        
+    def RemovePlayer(self, player):
+        """
+        Removes the player from the server and nulls the information
+        """
+        raise NotImplementedError()
+        
+    def DecidePlayerMarkers(self):
+        """
+        Randomly chooses the player markers
+        """
+        
+        if self.verbose:
+            print "Deciding the player markers"
+            
+        # Randomly pick number 1 or 0
+        random = Random()
+        choice = random.randint(0, 1)
+        
+        # If the choise was 0, set the first player to be X
+        if choice == 0:
+            self.listClients[0].SetMarker('X')
+            self.listClients[1].SetMarker('O')
+        # Otherwise, do the opposite
+        else:
+            self.listClients[0].SetMarker('O')
+            self.listClients[1].SetMarker('X')
+            
+        # Inform of the choices
+        if self.verbose:
+            print "Player 1 is", self.listClients[0].GetMarker()
+            print "Player 2 is", self.listClients[1].GetMarker()
         
     def HandleClientJoin(self, clientAddress):
         """
@@ -250,11 +285,64 @@ class Server(object):
         SendMessage(self.sock, player.ip, player.port, message)
         
         if self.CheckIfEnoughPlayersJoined() == True:
-            self.state = Server.STATE_PLAYING
+            # Change the state
+            self.ChangeState(self.STATE_PLAYING)
         
         
         # <---------- End of HandleClientJoin() -----------> #
             
+    def ChangeState(self, state):
+        """
+        Handles the changing from one state to another
+        Does the required state change operations as well
+        """
+        
+        if self.verbose:
+            print "Trying to change the state"
+            
+        # Check that the state is different than the one currently
+        if self.state == state:
+            if self.verbose:
+                print "The state you are trying to change is the same as current one!"
+            # Just return and prevent further changes
+            return
+        
+        # Otherwise, keep on going
+        if state == self.STATE_WAITING:
+            if self.verbose:
+                print "Changing to state", state
+            # Do something
+            return
+        
+        elif state == self.STATE_PLAYING:
+            if self.verbose:
+                print "Changing to state", state
+                
+            # When changing to playing state, pick the players' markers
+            self.DecidePlayerMarkers()
+            # Then, Create the game start messages to both of the players
+            message1 = CreateGameStartMessage(self.listClients[0].GetMarker())
+            message2 = CreateGameStartMessage(self.listClients[1].GetMarker())
+            # And send the messages
+            SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), message1)
+            SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), message2)
+            
+            # Do something
+            return
+        
+        elif state == self.STATE_SCORING:
+            if self.verbose:
+                print "Changing to state", state
+            # Do something
+            return
+        
+        else:
+            if self.verbose:
+                print "Received something weird as state change!", state
+            # Just return
+            return
+        
+        
                 
     def CheckIfEnoughPlayersJoined(self):
         """
