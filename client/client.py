@@ -183,8 +183,8 @@ class Client(object):
             print "Player", marker2, "scored", points2, "points."
             print "The winner of the game was:", winner
             
-            # And then set own state back to idle
-            self.state = Client.STATE_IDLE
+            # And close the game
+            sys.exit()
             
         
         # MSG_GAME_END

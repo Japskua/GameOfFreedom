@@ -228,9 +228,6 @@ class Server(object):
                 
                 # Send the victory message to the other player
                 self.InformPlayerForfeit()
-                
-                # Set state the WAITING
-                self.ChangeState(Server.STATE_WAITING)
         
         # Otherwise
         else:
@@ -253,6 +250,19 @@ class Server(object):
         
         # Remove the other player as well
         self.RemovePlayer(0)
+        
+        self.Clean()
+        
+    def Clean(self):
+        """
+        Cleans everything once the players are gone
+        """
+        self.turn = 1
+        self.activePlayer = 0
+        self.gameBoard.CreateBoard()
+        self.listClients = []
+        self.state = Server.STATE_WAITING
+        
         
         
     def FindPlayer(self, addr):
@@ -497,6 +507,9 @@ class Server(object):
             # Remove the players from the list
             for player in self.listClients:
                 self.listClients.remove(player)
+            
+            # Cleanup everything
+            self.Clean()
                 
             # Change the state
             self.state = Server.STATE_WAITING
@@ -556,6 +569,9 @@ class Server(object):
             # Send the message to both of the players
             SendMessage(self.sock, self.listClients[0].GetIp(), self.listClients[0].GetPort(), scoreMessage)
             SendMessage(self.sock, self.listClients[1].GetIp(), self.listClients[1].GetPort(), scoreMessage)
+            
+            # And change back to waiting state
+            self.ChangeState(Server.STATE_WAITING)
             return
         
         else:

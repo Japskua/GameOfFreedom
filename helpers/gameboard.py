@@ -35,6 +35,13 @@ class GameBoard(object):
         Creates a new empty board
         """
         
+        # Make the board empty, just in case
+        self.board = []
+        self._lastPlacement = None
+        self._availablePositions = []
+        self._listScoredX = []
+        self._listScoredY = []
+        
         # First, initialize to be empty
         if self.verbose:
             print "Creating the initial empty board"
@@ -95,22 +102,13 @@ class GameBoard(object):
         scorePlayer1 = 0
         scorePlayer2 = 0
         
-        # Set the playerX to score vertical
-        self.board[55] = GameBoard.MARKER_X
-        self.board[65] = GameBoard.MARKER_X
-        self.board[75] = GameBoard.MARKER_X
-        self.board[85] = GameBoard.MARKER_X
-        self.board[95] = GameBoard.MARKER_X
-        
-        self.DisplayBoard()
-        
         # Get the horizontal points for both of the players
         scorePlayer1 += self.CheckHorizontal(GameBoard.MARKER_X)
         scorePlayer2 += self.CheckHorizontal(GameBoard.MARKER_O) 
         
         # Get the vertical points for both of the players
         scorePlayer1 += self.CheckVertical(GameBoard.MARKER_X)
-        #scorePlayer2 += self.CheckVertical(GameBoard.MARKER_O)
+        scorePlayer2 += self.CheckVertical(GameBoard.MARKER_O)
         
         
         
@@ -149,6 +147,31 @@ class GameBoard(object):
         return points
     
     
+    def CheckIfPreviousHorizontalScore(self, listScored, position):
+        """
+        Checks whether the previous 4 horizontal stones have been score,
+        in which situation return True to signify taht the stone should
+        be added to the list as one extra, instead of calculating 4
+        points again
+        """
+        numbersFound = 0
+        
+        # Loop through the given list
+        for value in listScored:
+            # If the values are previous row numbers
+            if ((value == position-1) or (value == position-2) or
+                (value == position-3) or (value == position-4)):
+                # Add the number of found by 1
+                numbersFound+=1
+            
+        
+        # If the number found was 4
+        if numbersFound == 4:
+            return True
+        
+        # Otherwise, return False
+        return False
+    
     def CheckIfPreviousVerticalScore(self, listScored, position):
         """
         Checks whether the previous 4 vertical stones have been scored,
@@ -156,21 +179,15 @@ class GameBoard(object):
         added to the list as one extra, instead of calculating 4 points again
         """
         numbersFound = 0
-
-        
-        
-        print "Look for predecessors for", position        
+       
         # Loop trough the given list
         for value in listScored:
-            print value
             # If the values are previous column numbers
             if ((value == position-10) or (value == position-20) or
                 (value == position-30) or (value == position-40)):
                 # Add the number of found by 1
                 numbersFound+=1
                 
-                
-        print "Found", numbersFound, "numbers"
         # If the number found was 4
         if numbersFound == 4:
             return True
@@ -255,8 +272,23 @@ class GameBoard(object):
         # If the values are the same
         if ((self.board[position] == marker) and (self.board[position+1] == marker)
             and (self.board[position+2] == marker) and (self.board[position+3] == marker)):
-            # Return 4 points
-            return 4
+            # Get the scoring list
+            scoringList = self.GetScoringListByMarker(marker)
+            # Then, check if the stone is part of already formed 5 long list
+            if self.CheckIfPreviousHorizontalScore(scoringList, position+3) == False:
+                # If it is not part of the list
+                # Add the values to the scoring list
+                scoringList.append(position)
+                scoringList.append(position+1)
+                scoringList.append(position+2)
+                scoringList.append(position+3)
+                # And return 4 points
+                return 4
+            else:
+                # Otherwise, add the value to the scoringList 
+                scoringList.append(position)
+                # and just return 1 more point
+                return 1
         
         # Otherwise, return 0 points
         return 0
