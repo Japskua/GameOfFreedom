@@ -38,7 +38,7 @@ class Server(object):
     STATE_PLAYING = 1
     STATE_SCORING = 2
     
-    MAX_TURNS = 2
+    MAX_TURNS = 10
 
     def __init__(self, port, verbose):
         '''
@@ -573,6 +573,11 @@ class Server(object):
         if self.verbose:
             print "Creating the turn message"
             
+        # Get the free places
+        listPlaces = self.gameBoard.GetNextPossiblePlacement()
+        
+        
+        
         # Now, just display that all places are free
         message = CreateTurnMessage(0, 0)
         # Send the message to the client

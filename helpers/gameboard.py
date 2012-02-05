@@ -24,6 +24,8 @@ class GameBoard(object):
         self.verbose = verbose
         self.board = []
         
+        self._lastPlacement = None
+        
     def CreateBoard(self):
         """
         Creates a new empty board
@@ -41,6 +43,12 @@ class GameBoard(object):
         if self.verbose:
             print "Board initialized"
             
+    def GetLastPlacement(self):
+        """
+        Gets the last placement so that the next player
+        can be informed of the possible placement
+        """
+        return self._lastPlacement
             
     def DisplayBoard(self):
         """
@@ -51,6 +59,8 @@ class GameBoard(object):
             print "Displaying the board"
             print "Board size is:", len(self.board)
             
+            
+        
         # Loop through the whole list
         for position in range(0,100):
             if (position == 0):
@@ -63,7 +73,7 @@ class GameBoard(object):
                     print position, 
                 print "|"
             # If the value is not divisible by 9
-            elif (position % 9) == 0:
+            elif self.CheckIfRightCorner(position) == True:
                 print "|", self.board[position], 
                 if self.verbose:
                     print position, 
@@ -83,6 +93,160 @@ class GameBoard(object):
         
         
         return scorePlayer1, scorePlayer2
+    
+    def GetNextPossiblePlacement(self):
+        """
+        Gets the next possible placements that 
+        then can be sent to the next player
+        to inform of his/her possible movements
+        """
+        position = self.GetLastPlacement()    
+        
+        if self.verbose:
+            print "Getting the next possible placement"
+            print "Previous placement was", position
+            
+        
+        
+        listPlaces = []
+        
+        # Get the 3-NN Tiles
+        listAbove = self.Get3Above(position)
+        listSides = self.Get2Sides(position)
+        listBelow = self.Get3Below(position)
+        
+        if self.verbose:
+            print "The sizes of the list are the following"
+            print "Above:", len(listAbove)
+            print "Sides:", len(listSides)
+            print "Below:", len(listBelow)
+            
+        # Then, throw them into one list
+        # Checking if the values are okay on the go
+        
+        # Check, if the list is not empty
+        if len(listAbove) > 0:
+            for value in listAbove:
+                # Check if the marker is empty
+                if self.board[value] == GameBoard.MARKER_EMPTY:
+                    listPlaces.append(value)
+            
+        # Check the list size is not 0
+        if len(listSides) > 0:
+            for value in listSides:
+                # Check if the marker is empty
+                if self.board[value] == GameBoard.MARKER_EMPTY:
+                    listPlaces.append(value)
+            
+        # Check that the list is bigger than 0
+        if len(listBelow) > 0:
+            for value in listBelow:
+                # Check if the marker is empty
+                if self.board[value] == GameBoard.MARKER_EMPTY:
+                    listPlaces.append(value)
+            
+        if self.verbose:
+            print "The following places are free"
+            for value in listPlaces:
+                print value,
+            print "\nMaking total of", len(listPlaces), "places"
+        
+        # Finally, return the list gained
+        return listPlaces
+    
+    def Get3Below(self, position):
+        """
+        Gets the three values below
+        """
+        
+        listPosition = []
+        
+        # Check if the position is bigger than 90,
+        # Because in that case there are no value below
+        if position > 89:
+            return listPosition
+        
+        # Get the Left side value
+        if self.CheckIfLeftCorner(position) == False:
+            listPosition.append(position+9)
+            
+        # Get the value below
+        listPosition.append(position+10)
+        
+        # Get the right side value
+        if self.CheckIfRightCorner(position) == False:
+            listPosition.append(position+11)
+            
+        # Return the list
+        return listPosition
+                
+    def Get2Sides(self, position):
+        """
+        Gets the 2 values from both of the sides of the placement
+        """
+        
+        listPosition = []
+        
+        # Check the left corner
+        if self.CheckIfLeftCorner(position) == False:
+            listPosition.append(position-1)
+            
+        # Check the right corner
+        if self.CheckIfRightCorner(position) == False:
+            listPosition.append(position+1)
+            
+        # Return the list
+        return listPosition
+        
+    def Get3Above(self, position):
+        
+        listPositions = []
+        
+        # If the position is less than 10, there are no values above
+        if position < 10:
+            return listPositions
+        
+        # Check, if the value is in the left corner
+        if self.CheckIfLeftCorner(position) == False:
+            listPositions.append(position-11)
+              
+        # Otherwise, get the value above
+        listPositions.append(position-10)
+        
+        # Check if the value is in the right corner
+        if self.CheckIfRightCorner(position) == False:
+            listPositions.append(position-9)
+        
+        # Return the table
+        return listPositions
+        
+    def CheckIfRightCorner(self, position):
+        """
+        Checks if the given value is in the right side of the table
+        """
+        listRight = [9, 19, 29, 39, 49, 59, 69, 79, 89, 99]
+        
+        # If the position is in the list
+        if position in (listRight):
+            return True
+        
+        # Otherwise, return False
+        return False
+        
+    def CheckIfLeftCorner(self, position):
+        """
+        Checks if the given value is in the left side of the table
+        """
+        
+        listLeft = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
+        
+        # If the position is in the list
+        if position in (listLeft):
+            return True
+        
+        # Otherwise return False
+        return False
+        
         
 
     def TryPlaceMarker(self, position, marker):
@@ -120,6 +284,9 @@ class GameBoard(object):
         
         if self.verbose:
             print "Placed the", marker, "successfully to", position
+        
+        # Mark the last placement to be the position
+        self._lastPlacement = position
         
         # And return true as a mark of success
         return True
